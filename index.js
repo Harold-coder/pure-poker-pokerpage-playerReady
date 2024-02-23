@@ -66,9 +66,10 @@ async function saveGameState(gameId, game) {
     const params = {
         TableName: gameTableName,
         Key: { gameId },
-        UpdateExpression: "SET players = :p, smallBlindIndex = :sb, gameOverTimeStamp = :gOTS, bettingStarted = :bS, minRaiseAmount = :mRA, deck = :deck, pot = :pot, gameStage = :gs, currentTurn = :ct, communityCards = :cc, highestBet = :hb, gameInProgress = :gip, netWinners = :nw",
+        UpdateExpression: "SET players = :p, playerCount = :pc, smallBlindIndex = :sb, gameOverTimeStamp = :gOTS, bettingStarted = :bS, minRaiseAmount = :mRA, deck = :deck, pot = :pot, gameStage = :gs, currentTurn = :ct, communityCards = :cc, highestBet = :hb, gameInProgress = :gip, netWinners = :nw",
         ExpressionAttributeValues: {
             ":p": game.players,
+            ":pc": game.playerCount,
             ":sb": game.smallBlindIndex,
             ":gOTS": game.gameOverTimeStamp,
             ":bS": game.bettingStarted,
@@ -109,7 +110,7 @@ async function resetGameState(game) {
     }
 
     // Filter players who are ready and have enough chips
-    const remainingPlayers = game.players.filter(player => player.chips >= game.initialBigBlind && player.ready);
+    const remainingPlayers = game.players.filter(player => player.chips >= game.initialBigBlind);
     const newPlayerCount = remainingPlayers.length;
 
     if (newPlayerCount >= game.minPlayers) {
@@ -142,6 +143,8 @@ async function resetGameState(game) {
         game.gameOverTimeStamp = null;
         game.minRaiseAmount = game.initialBigBlind;
         game.bettingStarted = false;
+        game.playerCount = newPlayerCount;
+
     } else {
         console.log("Not enough players to start a new game.");
     }
