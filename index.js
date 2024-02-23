@@ -73,11 +73,11 @@ exports.handler = async (event) => {
         if (allReady || timeElapsed > 30000) {
             // Reset game state for a new game
             resetGameState(game);
-            game = setBlindsAndDeal(game);
-            await saveGameState(gameId, game);
+            updatedGame = setBlindsAndDeal(game);
+            await saveGameState(gameId, updatedGame);
 
             // Notify all players about the updated game state
-            await notifyAllPlayers(gameId, game);
+            await notifyAllPlayers(gameId, updatedGame);
         }
 
         return { statusCode: 200, body: 'Player ready processed.' };
