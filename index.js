@@ -160,7 +160,7 @@ async function resetGameState(game) {
             inHand: true,
             amountWon: 0,
             handDescription: null,
-            ready: false, // Reset readiness for the new game
+            isReady: false,
             potContribution: 0,
         }));
 
