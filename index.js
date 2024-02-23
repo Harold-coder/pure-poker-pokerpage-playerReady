@@ -12,39 +12,32 @@ function setBlindsAndDeal(gameState) {
     const bigBlindAmount = gameState.initialBigBlind;
     const bigBlindIndex = (gameState.smallBlindIndex + 1) % gameState.players.length;
 
+    // Assuming Deck is already defined and has a shuffle method
     const deck = new Deck();
     deck.shuffle();
 
-    const updatedPlayers = gameState.players.map((player, index) => {
+    // Update players in place
+    gameState.players.forEach((player, index) => {
         const isSmallBlind = index === gameState.smallBlindIndex;
         const isBigBlind = index === bigBlindIndex;
         const betAmount = isSmallBlind ? smallBlindAmount : (isBigBlind ? bigBlindAmount : 0);
-        const chips = player.chips - betAmount;
-        const potContribution = player.potContribution + betAmount;
-        
-        return {
-            ...player,
-            bet: betAmount,
-            chips,
-            potContribution,
-            hand: deck.deal(2),
-        };
+
+        // Update player properties directly
+        player.bet = betAmount;
+        player.chips -= betAmount;
+        player.potContribution += betAmount;
+        player.hand = deck.deal(2); // Assuming deal method exists and deals 2 cards
     });
 
-    const newPot = gameState.pot + smallBlindAmount + bigBlindAmount;
-    const nextTurn = (bigBlindIndex + 1) % gameState.players.length;
-    const newGameState = {
-        ...gameState,
-        players: updatedPlayers,
-        pot: newPot,
-        deck: deck,
-        gameStage: 'preFlop',
-        highestBet: 10,
-        bettingStarted: true,
-        currentTurn: nextTurn,
-    };
+    // Update gameState properties directly
+    gameState.pot += smallBlindAmount + bigBlindAmount;
+    gameState.currentTurn = (bigBlindIndex + 1) % gameState.players.length;
+    gameState.deck = deck; // Update the deck in the gameState
+    gameState.gameStage = 'preFlop';
+    gameState.highestBet = bigBlindAmount;
+    gameState.bettingStarted = true;
 
-    return newGameState;
+    // No need to return a new object, as gameState is modified in place
 }
 
 
@@ -73,9 +66,9 @@ exports.handler = async (event) => {
         if (allReady || timeElapsed > 30000) {
             // Reset game state for a new game
             resetGameState(game);
-            updatedGame = setBlindsAndDeal(game);
+            setBlindsAndDeal(game);
         }
-        await saveGameState(gameId, updatedGame);
+        await saveGameState(gameId, game);
 
         // Notify all players about the updated game state
         await notifyAllPlayers(gameId, updatedGame);
