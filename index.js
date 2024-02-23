@@ -7,6 +7,47 @@ const apiGatewayManagementApi = new AWS.ApiGatewayManagementApi({
     endpoint: process.env.WEBSOCKET_ENDPOINT // Set this environment variable to your WebSocket API endpoint.
 });
 
+function setBlindsAndDeal(gameState) {
+    const smallBlindAmount = gameState.initialBigBlind / 2;
+    const bigBlindAmount = gameState.initialBigBlind;
+    const bigBlindIndex = (gameState.smallBlindIndex + 1) % gameState.players.length;
+
+    const deck = new Deck();
+    deck.shuffle();
+
+    const updatedPlayers = gameState.players.map((player, index) => {
+        const isSmallBlind = index === gameState.smallBlindIndex;
+        const isBigBlind = index === bigBlindIndex;
+        const betAmount = isSmallBlind ? smallBlindAmount : (isBigBlind ? bigBlindAmount : 0);
+        const chips = player.chips - betAmount;
+        const potContribution = player.potContribution + betAmount;
+        
+        return {
+            ...player,
+            bet: betAmount,
+            chips,
+            potContribution,
+            hand: deck.deal(2),
+        };
+    });
+
+    const newPot = gameState.pot + smallBlindAmount + bigBlindAmount;
+    const nextTurn = (bigBlindIndex + 1) % gameState.players.length;
+    const newGameState = {
+        ...gameState,
+        players: updatedPlayers,
+        pot: newPot,
+        deck: deck,
+        gameStage: 'preFlop',
+        highestBet: 10,
+        bettingStarted: true,
+        currentTurn: nextTurn,
+    };
+
+    return newGameState;
+}
+
+
 exports.handler = async (event) => {
     const connectionId = event.requestContext.connectionId;
     const { gameId, playerId } = JSON.parse(event.body);
@@ -32,13 +73,12 @@ exports.handler = async (event) => {
         if (allReady || timeElapsed > 30000) {
             // Reset game state for a new game
             resetGameState(game);
+            game = setBlindsAndDeal(game);
+            await saveGameState(gameId, game);
+
+            // Notify all players about the updated game state
+            await notifyAllPlayers(gameId, game);
         }
-
-        // Save the updated game state
-        await saveGameState(gameId, game);
-
-        // Notify all players about the updated game state
-        await notifyAllPlayers(gameId, game);
 
         return { statusCode: 200, body: 'Player ready processed.' };
     } catch (error) {
@@ -133,7 +173,6 @@ async function resetGameState(game) {
 
         // Reset the game state
         game.pot = 0;
-        game.deck = new Deck().shuffle(); // Assuming your Deck class has a shuffle method
         game.communityCards = [];
         game.currentTurn = game.smallBlindIndex;
         game.gameStage = 'preDealing';
