@@ -74,11 +74,11 @@ exports.handler = async (event) => {
             // Reset game state for a new game
             resetGameState(game);
             updatedGame = setBlindsAndDeal(game);
-            await saveGameState(gameId, updatedGame);
-
-            // Notify all players about the updated game state
-            await notifyAllPlayers(gameId, updatedGame);
         }
+        await saveGameState(gameId, updatedGame);
+
+        // Notify all players about the updated game state
+        await notifyAllPlayers(gameId, updatedGame);
 
         return { statusCode: 200, body: 'Player ready processed.' };
     } catch (error) {
