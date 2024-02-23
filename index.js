@@ -71,7 +71,7 @@ exports.handler = async (event) => {
         await saveGameState(gameId, game);
 
         // Notify all players about the updated game state
-        await notifyAllPlayers(gameId, updatedGame);
+        await notifyAllPlayers(gameId, game);
 
         return { statusCode: 200, body: 'Player ready processed.' };
     } catch (error) {
