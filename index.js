@@ -1,45 +1,11 @@
 const AWS = require('aws-sdk');
+const Helpers = require('UpdateGame');
 const dynamoDb = new AWS.DynamoDB.DocumentClient();
 const gameTableName = process.env.GAME_TABLE;
-const Deck = require('Deck');
 const connectionsTableName = process.env.CONNECTIONS_TABLE; // Table for WebSocket connections
 const apiGatewayManagementApi = new AWS.ApiGatewayManagementApi({
     endpoint: process.env.WEBSOCKET_ENDPOINT // Set this environment variable to your WebSocket API endpoint.
 });
-
-function setBlindsAndDeal(gameState) {
-    const smallBlindAmount = gameState.initialBigBlind / 2;
-    const bigBlindAmount = gameState.initialBigBlind;
-    const bigBlindIndex = (gameState.smallBlindIndex + 1) % gameState.players.length;
-
-    // Assuming Deck is already defined and has a shuffle method
-    const deck = new Deck();
-    deck.shuffle();
-
-    // Update players in place
-    gameState.players.forEach((player, index) => {
-        const isSmallBlind = index === gameState.smallBlindIndex;
-        const isBigBlind = index === bigBlindIndex;
-        const betAmount = isSmallBlind ? smallBlindAmount : (isBigBlind ? bigBlindAmount : 0);
-
-        // Update player properties directly
-        player.bet = betAmount;
-        player.chips -= betAmount;
-        player.potContribution += betAmount;
-        player.hand = deck.deal(2); // Assuming deal method exists and deals 2 cards
-    });
-
-    // Update gameState properties directly
-    gameState.pot += smallBlindAmount + bigBlindAmount;
-    gameState.currentTurn = (bigBlindIndex + 1) % gameState.players.length;
-    gameState.deck = deck; // Update the deck in the gameState
-    gameState.gameStage = 'preFlop';
-    gameState.highestBet = bigBlindAmount;
-    gameState.bettingStarted = true;
-
-    // No need to return a new object, as gameState is modified in place
-}
-
 
 exports.handler = async (event) => {
     const connectionId = event.requestContext.connectionId;
@@ -66,7 +32,7 @@ exports.handler = async (event) => {
         if (allReady || timeElapsed > 30000) {
             // Reset game state for a new game
             resetGameState(game);
-            setBlindsAndDeal(game);
+            Helpers.setBlindsAndDeal(game);
         }
         await saveGameState(gameId, game);
 
