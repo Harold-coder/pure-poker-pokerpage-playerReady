@@ -1,7 +1,7 @@
 const AWS = require('aws-sdk');
 const dynamoDb = new AWS.DynamoDB.DocumentClient();
 const gameTableName = process.env.GAME_TABLE;
-const Deck = require('./Deck');
+const Deck = require('Deck');
 const connectionsTableName = process.env.CONNECTIONS_TABLE; // Table for WebSocket connections
 const apiGatewayManagementApi = new AWS.ApiGatewayManagementApi({
     endpoint: process.env.WEBSOCKET_ENDPOINT // Set this environment variable to your WebSocket API endpoint.
