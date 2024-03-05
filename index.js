@@ -6,6 +6,7 @@ const connectionsTableName = process.env.CONNECTIONS_TABLE; // Table for WebSock
 const apiGatewayManagementApi = new AWS.ApiGatewayManagementApi({
     endpoint: process.env.WEBSOCKET_ENDPOINT // Set this environment variable to your WebSocket API endpoint.
 });
+// hello here
 
 exports.handler = async (event) => {
     const connectionId = event.requestContext.connectionId;
