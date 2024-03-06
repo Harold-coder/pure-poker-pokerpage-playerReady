@@ -66,7 +66,7 @@ async function saveGameState(gameId, game) {
     const params = {
         TableName: gameTableName,
         Key: { gameId },
-        UpdateExpression: "SET players = :p, playerCount = :pc, smallBlindIndex = :sb, gameOverTimeStamp = :gOTS, bettingStarted = :bS, minRaiseAmount = :mRA, deck = :deck, pot = :pot, gameStage = :gs, currentTurn = :ct, communityCards = :cc, highestBet = :hb, gameInProgress = :gip, netWinners = :nw",
+        UpdateExpression: "SET players = :p, playerCount = :pc, smallBlindIndex = :sb, gameOverTimeStamp = :gOTS, bettingStarted = :bS, minRaiseAmount = :mRA, deck = :deck, pot = :pot, gameStage = :gs, currentTurn = :ct, communityCards = :cc, highestBet = :hb, gameInProgress = :gip, netWinners = :nw, waitingPlayers = :wp",
         ExpressionAttributeValues: {
             ":p": game.players,
             ":pc": game.playerCount,
@@ -81,7 +81,8 @@ async function saveGameState(gameId, game) {
             ":hb": game.highestBet,
             ":gip": game.gameInProgress,
             ":nw": game.netWinners,
-            ":deck": game.deck
+            ":deck": game.deck,
+            ":wp": game.waitingPlayers
         },
         ReturnValues: "UPDATED_NEW"
     };
