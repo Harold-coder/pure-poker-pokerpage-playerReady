@@ -14,7 +14,6 @@ exports.handler = async (event) => {
 
     try {
         const game = await getGameState(gameId);
-        console.log("we got the game!");
 
         if (!game || game.gameStage !== 'gameOver') {
             throw new Error("Game not found or not in 'gameOver' stage.");
@@ -64,8 +63,6 @@ async function getGameState(gameId) {
 }
 
 async function saveGameState(gameId, game) {
-    console.log(game);
-    console.log(game.players);
     const params = {
         TableName: gameTableName,
         Key: { gameId },
@@ -111,7 +108,6 @@ async function resetGameState(game) {
     if (!game) {
         throw new Error("Game not found");
     }
-    console.log("We are resetting the game state!");
 
     // Filter players who are ready and have enough chips
     const activePlayers = game.players.filter(player => player.chips >= game.initialBigBlind);
@@ -124,7 +120,7 @@ async function resetGameState(game) {
     const newPlayersFromWaitingList = game.waitingPlayers.slice(0, spaceAvailable).map(playerId => ({
         id: playerId,
         position: game.players.length,
-        chips: game.initialBuyIn,
+        chips: game.buyIn,
         isReady: true, // Assuming waiting players are ready to play
         bet: 0,
         inHand: true,
@@ -161,10 +157,8 @@ async function resetGameState(game) {
             potContribution: 0,
         }));
 
-        console.log("waiting players before:", game.waitingPlayers);
         // Remove seated players from the waitingPlayers list
         game.waitingPlayers = game.waitingPlayers.slice(spaceAvailable);
-        console.log("waiting players after:", game.waitingPlayers);
 
 
         // Reset the game state
