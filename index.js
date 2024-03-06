@@ -110,15 +110,39 @@ async function resetGameState(game) {
     }
 
     // Filter players who are ready and have enough chips
-    const remainingPlayers = game.players.filter(player => player.chips >= game.initialBigBlind);
-    const newPlayerCount = remainingPlayers.length;
+    const activePlayers = game.players.filter(player => player.chips >= game.initialBigBlind);
+
+    // Include waiting players if there's space available
+    const spaceAvailable = game.maxPlayers - activePlayers.length;
+
+    const newPlayersFromWaitingList = game.waitingPlayers.slice(0, spaceAvailable).map(playerId => ({
+        id: playerId,
+        position: gameSession.players.length,
+        chips: game.initialBuyIn,
+        isReady: true, // Assuming waiting players are ready to play
+        bet: 0,
+        inHand: true,
+        isReady: false,
+        hand: [],
+        hasActed: false,
+        potContribution: 0,
+        isAllIn: false,
+        amountWon: 0,
+        handDescription: null,
+        bestHand: null,
+    }));
+
+    // Combine the active players with the new players from the waiting list
+    const updatedPlayers = [...activePlayers, ...newPlayersFromWaitingList];
+
+    const newPlayerCount = updatedPlayers.length;
 
     if (newPlayerCount >= game.minPlayers) {
         // Update small blind index
         game.smallBlindIndex = (game.smallBlindIndex + 1) % newPlayerCount;
         
         // Update player states for the new game
-        game.players = remainingPlayers.map((player, index) => ({
+        game.players = updatedPlayers.map((player, index) => ({
             ...player,
             bet: 0,
             position: index,
@@ -130,6 +154,9 @@ async function resetGameState(game) {
             isReady: false,
             potContribution: 0,
         }));
+
+        // Remove seated players from the waitingPlayers list
+        game.waitingPlayers = game.waitingPlayers.slice(spaceAvailable);
 
         // Reset the game state
         game.pot = 0;
