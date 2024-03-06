@@ -117,7 +117,7 @@ async function resetGameState(game) {
 
     const newPlayersFromWaitingList = game.waitingPlayers.slice(0, spaceAvailable).map(playerId => ({
         id: playerId,
-        position: gameSession.players.length,
+        position: game.players.length,
         chips: game.initialBuyIn,
         isReady: true, // Assuming waiting players are ready to play
         bet: 0,
